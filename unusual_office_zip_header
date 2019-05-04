@@ -1,1 +1,29 @@
-rule will be pushed before our Sp4kcon presentation on May 4, 2019, stay tuned . . .
+rule unusual_office_zip_header
+{
+	meta:
+		description = "MS Office Open_XML document with unusual zip header"
+		weight  = 90
+		author = "Carrie Roberts - Walmart Information Security"
+		date = "2019-04-02"
+
+		strings:
+			// Headers of files to look for
+			$header_pkzip_with_zero_extra_field_length = { 50 4b 03 04 [24] 00 00} //PK zip header			
+			$office_openxml="[Content_Types].xml" nocase
+			$has_macros = "/vbaProject.bin" nocase
+				
+			/* Zero extra field length found in PK header for:
+			   -> LibreOffice 6.2.2
+			   -> OpenOffice 4.1.6
+			   -> Win10 built in "Send to->Compressed (zipped) folder"
+			   -> 7z zip format - (7z format not readable by Offce)
+			   -> Python zipfile lib as found in https://github.com/haroldogden/adb
+			   -> Powershell as found in https://github.com/clr2of8/Commentator
+			   -> .Net System.IO.compression as found in https://github.com/outflanknl/EvilClippy
+			   Zero extra field length NOT found in PK header for:
+			   -> Office 2019, 2016, 2013, 2010, 2007
+			*/
+
+		condition:
+			($header_pkzip_with_zero_extra_field_length at 0) and $office_openxml and $has_macros
+}
